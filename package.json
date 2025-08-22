@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:dump": "powershell -ExecutionPolicy Bypass -File ./scripts-local/dump-schema.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
