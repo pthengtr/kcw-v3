@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Prompt } from "next/font/google";
 import "./global.css";
+import { Toaster } from "sonner";
 
 const prompt = Prompt({
   weight: ["400", "700"],
@@ -23,6 +24,7 @@ export default function Layout({
     <html lang="en" className="h-full">
       <body className={`${prompt.className} antialiased h-full`}>
         {children}
+        <Toaster richColors /> {/* keep this at the bottom of body */}
       </body>
     </html>
   );
