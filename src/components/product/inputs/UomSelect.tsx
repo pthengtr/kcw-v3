@@ -36,7 +36,7 @@ export function UomSelect({
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger>
-        <SelectValue placeholder="Select UOM" />
+        <SelectValue placeholder="เลือกหน่วย" />
       </SelectTrigger>
       <SelectContent>
         {items.map((u) => (

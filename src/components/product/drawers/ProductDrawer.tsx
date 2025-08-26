@@ -30,7 +30,7 @@ import {
   type ProductItemRow,
 } from "@/components/product/types";
 import { createClient } from "@/lib/supabase/client";
-import { SkuManager } from "@/components/product/forms/SkuManager";
+import { SkuManager } from "@/components/product/forms/sku/SkuManager";
 import { BarcodeManager } from "@/components/product/forms/BarcodeManager";
 
 export function ProductDrawer({
@@ -210,11 +210,8 @@ export function ProductDrawer({
 
             <Tabs defaultValue="skus">
               <TabsList>
-                <TabsTrigger value="skus">SKUs</TabsTrigger>
-                <TabsTrigger value="barcodes">Barcodes</TabsTrigger>
-                <TabsTrigger value="sizes" disabled>
-                  Sizes (soon)
-                </TabsTrigger>
+                <TabsTrigger value="skus">รหัสสินค้า</TabsTrigger>
+                <TabsTrigger value="barcodes">บาร์โค๊ด</TabsTrigger>
               </TabsList>
 
               <TabsContent value="skus" className="pt-4">
