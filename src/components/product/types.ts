@@ -9,22 +9,26 @@ export type ProductSkuRow = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  product_item: {
+  product_description: string | null; // ← add this
+  product_item?: {
     product_uuid: string;
     product_name: string;
-    category_code: string | null;
-  } | null;
+    category_code: string;
+    product_description?: string | null;
+  };
   total_count: number; // from window function
 };
 
+// types.ts
 export type SortKey =
+  | "product_name"
+  | "product_description" // ← add this
+  | "category_code"
   | "sku_code"
   | "sku_short_code"
   | "uom_code"
   | "default_tax_code"
-  | "sku_updated_at"
-  | "product_name"
-  | "category_code";
+  | "sku_updated_at";
 
 export type ProductQuery = {
   pageIndex: number;

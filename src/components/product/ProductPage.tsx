@@ -4,29 +4,7 @@ import * as React from "react";
 
 import ProductTable from "@/components/product/ProductTable";
 import { createClient } from "@/lib/supabase/client";
-import { ProductSkuRow } from "./types";
-
-// ---- Sorting keys we allow (SKU-first, then product columns shown) ----
-export type SortKey =
-  | "sku_code"
-  | "sku_short_code"
-  | "uom_code"
-  | "default_tax_code"
-  | "sku_updated_at" // maps to product_sku.updated_at
-  | "product_name"
-  | "category_code";
-
-// ---- Query state owned by the page (server-driven) ----
-export type ProductQuery = {
-  pageIndex: number;
-  pageSize: number;
-  sortBy: { id: SortKey; desc: boolean } | null;
-  filters: {
-    search?: string; // matches product_name OR sku_code (contains)
-    category?: string | null; // category_code (contains)
-    active?: boolean | "all"; // SKU is_active filter
-  };
-};
+import { ProductQuery, ProductSkuRow } from "./types";
 
 export default function ProductPage() {
   const supabase = createClient();

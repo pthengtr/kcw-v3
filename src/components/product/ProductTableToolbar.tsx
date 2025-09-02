@@ -1,3 +1,4 @@
+// components/product/ProductTableToolbar.tsx
 "use client";
 
 import * as React from "react";
@@ -34,9 +35,9 @@ type Props = {
   total: number;
   onQueryChange: (next: Partial<ProductQuery>) => void;
 
-  /** New (optional): currently selected rows to enable Update/Delete */
-  selected?: ProductSkuRow[];
-  /** New (optional): force a table refresh after actions */
+  /** Single selected row (or null) */
+  selected?: ProductSkuRow | null;
+  /** Optional: force a table refresh after actions */
   refresh?: () => Promise<void> | void;
 };
 
@@ -45,15 +46,13 @@ function ProductTableToolbarBase({
   loading,
   total,
   onQueryChange,
-  selected = [],
+  selected = null,
   refresh,
 }: Props) {
   const supabase = React.useMemo(() => createClient(), []);
-  const hasSelection = selected.length > 0;
-  const oneSelected = selected.length === 1 ? selected[0] : null;
+  const hasSelection = !!selected;
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-  // Put this near the top of the file (or above handleDelete)
   type DeleteResult = {
     product_uuid: string;
     ok: boolean;
@@ -61,8 +60,8 @@ function ProductTableToolbarBase({
   };
 
   async function handleDelete() {
-    if (!hasSelection) return;
-    const ids = selected.map((r) => r.product_uuid);
+    if (!selected) return;
+    const ids = [selected.product_uuid];
 
     try {
       const { data, error } = await supabase.rpc("fn_product_delete_many", {
@@ -77,7 +76,7 @@ function ProductTableToolbarBase({
         const message = failures
           .map((f) => `${f.product_uuid}: ${f.error ?? "unknown error"}`)
           .join("\n");
-        alert(`Some items could not be deleted:\n${message}`);
+        alert(`Could not delete:\n${message}`);
       }
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : String(e));
@@ -171,21 +170,24 @@ function ProductTableToolbarBase({
           }}
         />
 
-        {/* Update: only when exactly one selected */}
-        {oneSelected && (
+        {/* Update: show when one is selected */}
+        {hasSelection && selected && (
           <ProductSkuDialog
             mode="update"
             initial={{
-              product_uuid: oneSelected.product_uuid,
-              sku_uuid: oneSelected.sku_uuid,
-              product_name: oneSelected.product_item?.product_name ?? "",
-              product_description: "", // not in row payload; load per-RPC if you need it
-              category_code: oneSelected.product_item?.category_code ?? "",
-              is_active: oneSelected.is_active,
-              sku_code: oneSelected.sku_code ?? undefined,
-              uom_code: oneSelected.uom_code,
-              sku_short_code: oneSelected.sku_short_code ?? undefined,
-              default_tax_code: oneSelected.default_tax_code ?? "",
+              product_uuid: selected.product_uuid,
+              sku_uuid: selected.sku_uuid,
+              product_name: selected.product_item?.product_name ?? "",
+              product_description:
+                selected.product_description ??
+                selected.product_item?.product_description ??
+                "", // not in row payload; loaded via RPC if needed
+              category_code: selected.product_item?.category_code ?? "",
+              is_active: selected.is_active,
+              sku_code: selected.sku_code ?? undefined,
+              uom_code: selected.uom_code,
+              sku_short_code: selected.sku_short_code ?? undefined,
+              default_tax_code: selected.default_tax_code ?? "",
             }}
             trigger={
               <Button size="sm" variant="secondary" className="gap-2">
@@ -199,7 +201,7 @@ function ProductTableToolbarBase({
           />
         )}
 
-        {/* Delete: only when any selected */}
+        {/* Delete: single item */}
         {hasSelection && (
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
             <AlertDialogTrigger asChild>
@@ -209,9 +211,7 @@ function ProductTableToolbarBase({
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Delete {selected.length} item{selected.length > 1 ? "s" : ""}?
-                </AlertDialogTitle>
+                <AlertDialogTitle>Delete 1 item?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This removes the product, its SKU, and primary barcode. It may
                   fail if referenced by other records.

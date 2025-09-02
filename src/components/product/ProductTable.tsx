@@ -1,3 +1,4 @@
+// components/product/ProductTable.tsx
 "use client";
 
 import * as React from "react";
@@ -41,21 +42,16 @@ export default function ProductTable({
   query,
   onQueryChange,
 }: Props) {
-  // --- NEW: selection state (by sku_uuid) ---
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  // === Single selection (by sku_uuid) ===
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
   const selected = React.useMemo(
-    () => rows.filter((r) => selectedIds.has(r.sku_uuid)),
-    [rows, selectedIds]
+    () => rows.find((r) => r.sku_uuid === selectedId) ?? null,
+    [rows, selectedId]
   );
 
   const toggleSelect = React.useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setSelectedId((prev) => (prev === id ? null : id));
   }, []);
 
   // server-sort helpers
@@ -83,8 +79,8 @@ export default function ProductTable({
   );
 
   const rowIsSelected = React.useCallback(
-    (row: ProductSkuRow) => selectedIds.has(row.sku_uuid),
-    [selectedIds]
+    (row: ProductSkuRow) => selectedId === row.sku_uuid,
+    [selectedId]
   );
 
   const getRowClassName = React.useCallback(
@@ -113,6 +109,24 @@ export default function ProductTable({
         ),
         meta: { minWidth: 220 },
       },
+      {
+        id: "product_description",
+        accessorKey: "product_description",
+        header: () => (
+          <DataTableColumnHeader
+            title="Description"
+            onClick={() => toggleSort("product_description")}
+            sort={sortFor("product_description")}
+          />
+        ),
+        cell: ({ getValue }) => (
+          <span className="text-muted-foreground block max-w-[480px] truncate">
+            {getValue<string>() ?? ""}
+          </span>
+        ),
+        meta: { minWidth: 280 },
+      },
+
       {
         id: "category_code",
         accessorFn: (row) => row.product_item?.category_code ?? "",
@@ -186,7 +200,7 @@ export default function ProductTable({
         header: () => (
           <DataTableColumnHeader
             title="Active"
-            onClick={() => toggleSort("sku_code")} // or add a dedicated key if you want to sort by active
+            onClick={() => toggleSort("sku_code")}
             sort={null}
           />
         ),
@@ -221,7 +235,7 @@ export default function ProductTable({
         loading={loading}
         total={total}
         onQueryChange={onQueryChange}
-        // NEW: pass selection + simple refresh
+        // single-selected row (or null)
         selected={selected}
         refresh={() => onQueryChange({})}
       />
@@ -230,7 +244,6 @@ export default function ProductTable({
         columns={columns}
         data={rows}
         getRowId={(r) => r.sku_uuid}
-        // NEW: toggle selection on click (works without special table APIs)
         onRowClick={(r) => toggleSelect(r.sku_uuid)}
         getRowClassName={(row) => getRowClassName(row)}
         stickyFooter={
