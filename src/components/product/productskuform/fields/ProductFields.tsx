@@ -4,13 +4,6 @@ import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   FormField,
@@ -20,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { FormInput, RefsPayload } from "../types";
+import CategorySelect from "../../CategorySelect";
 
 export function ProductFields({ opts }: { opts: RefsPayload }) {
   const form = useFormContext<FormInput>();
@@ -60,23 +54,16 @@ export function ProductFields({ opts }: { opts: RefsPayload }) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Category</FormLabel>
-            <Select
-              value={field.value || undefined}
-              onValueChange={(v) => field.onChange(v)}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {opts.categories.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <CategorySelect
+                value={(field.value as string | undefined) ?? undefined}
+                onChange={(v) => field.onChange(v === "all" ? "" : v)}
+                options={opts.categories}
+                includeAll={false} // form should FORCE a choice, so no "All"
+                placeholder="Select category"
+                className="w-full"
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

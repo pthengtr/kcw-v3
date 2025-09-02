@@ -100,9 +100,6 @@ export function ServerDataTable<TData>({
       {/* Toolbar */}
       <div className="flex items-center gap-2 p-2 border-b bg-muted/40">
         <DataTableViewOptions table={table} />
-        <div className="ml-auto text-xs text-muted-foreground">
-          {Object.keys(rowSelection).length} selected
-        </div>
       </div>
 
       {/* Table */}
