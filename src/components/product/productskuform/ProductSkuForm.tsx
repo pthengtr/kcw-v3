@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Form as ShadForm } from "@/components/ui/form";
 
+import { toast } from "sonner";
+
 import { ProductFields } from "./fields/ProductFields";
 import { SkuFields } from "./fields/SkuFields";
 import { TaxField } from "./fields/TaxField";
@@ -19,6 +21,7 @@ import {
   type ProductSkuFormMode,
   type ProductSkuInitial,
 } from "./types";
+import { isPostgrestError } from "@/lib/utils";
 
 type Props = {
   mode: ProductSkuFormMode;
@@ -49,7 +52,6 @@ export default function ProductSkuForm({
       category_code: initial?.category_code ?? "",
       is_active: initial?.is_active ?? true,
       sku_code: initial?.sku_code ?? "",
-      uom_code: initial?.uom_code ?? "",
       sku_short_code: initial?.sku_short_code ?? "",
       default_tax_code: initial?.default_tax_code ?? "",
     }),
@@ -67,6 +69,26 @@ export default function ProductSkuForm({
 
   const [submitting, setSubmitting] = React.useState(false);
 
+  function formatSupabaseError(err: unknown) {
+    if (isPostgrestError(err)) {
+      const title = err.code ? `${err.code}: ${err.message}` : err.message;
+      const details = typeof err.details === "string" ? err.details : undefined;
+      const hint = typeof err.hint === "string" ? err.hint : undefined;
+      const description =
+        [details, hint].filter(Boolean).join(" · ") || undefined;
+      return { title, description };
+    }
+
+    if (err instanceof Error) {
+      return {
+        title: err.name ? `${err.name}: ${err.message}` : err.message,
+        description: undefined,
+      };
+    }
+
+    return { title: "Something went wrong", description: String(err) };
+  }
+
   async function onSubmit(values: FormInput) {
     const supabase = createClient();
     setSubmitting(true);
@@ -78,7 +100,6 @@ export default function ProductSkuForm({
           _category_code: values.category_code,
           _is_active: values.is_active ?? true,
           _sku_code: values.sku_code?.trim() ? values.sku_code.trim() : null,
-          _uom_code: values.uom_code,
           _sku_short_code: values.sku_short_code?.trim()
             ? values.sku_short_code.trim()
             : null,
@@ -92,6 +113,7 @@ export default function ProductSkuForm({
           payload
         );
         if (error) throw error;
+
         const res = (Array.isArray(data) ? data[0] : data) as {
           product_uuid: string;
           sku_uuid: string;
@@ -99,9 +121,13 @@ export default function ProductSkuForm({
         };
         onSaved?.(res);
         form.reset();
+        toast.success("Product created", {
+          description: `SKU ${res.sku_code}`,
+        });
       } else {
         if (!initial?.product_uuid || !initial?.sku_uuid)
           throw new Error("Missing identifiers for update.");
+
         const payload = {
           _product_uuid: initial.product_uuid,
           _sku_uuid: initial.sku_uuid,
@@ -110,11 +136,12 @@ export default function ProductSkuForm({
           _category_code: values.category_code,
           _is_active: values.is_active ?? true,
           _sku_code: values.sku_code?.trim() ? values.sku_code.trim() : null,
-          _uom_code: values.uom_code,
           _sku_short_code: values.sku_short_code?.trim()
             ? values.sku_short_code.trim()
             : null,
-          _default_tax_code: values.default_tax_code, // required
+          _default_tax_code: values.default_tax_code?.trim()
+            ? values.default_tax_code.trim()
+            : null, // required
         } as const;
 
         const { data, error } = await supabase.rpc(
@@ -122,13 +149,21 @@ export default function ProductSkuForm({
           payload
         );
         if (error) throw error;
+
         const res = (Array.isArray(data) ? data[0] : data) as {
           product_uuid: string;
           sku_uuid: string;
           sku_code: string;
         };
         onSaved?.(res);
+        toast.success("Product updated", {
+          description: `SKU ${res.sku_code}`,
+        });
       }
+    } catch (err) {
+      const { title, description } = formatSupabaseError(err);
+      toast.error(title, { description });
+      console.log(err);
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +188,7 @@ export default function ProductSkuForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ProductFields opts={opts} />
             <div className="space-y-3">
-              <SkuFields opts={opts} />
+              <SkuFields />
               <TaxField opts={opts} />
             </div>
           </div>

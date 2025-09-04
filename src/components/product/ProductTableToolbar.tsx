@@ -235,7 +235,6 @@ function ProductTableToolbarBase({
               category_code: selected.product_item?.category_code ?? "",
               is_active: selected.is_active,
               sku_code: selected.sku_code ?? undefined,
-              uom_code: selected.uom_code,
               sku_short_code: selected.sku_short_code ?? undefined,
               default_tax_code: selected.default_tax_code ?? "",
             }}

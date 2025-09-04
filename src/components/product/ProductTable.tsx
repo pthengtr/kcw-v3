@@ -169,19 +169,6 @@ export default function ProductTable({
         meta: { minWidth: 120 },
       },
       {
-        id: "uom_code",
-        accessorKey: "uom_code",
-        header: () => (
-          <DataTableColumnHeader
-            title="UOM"
-            onClick={() => toggleSort("uom_code")}
-            sort={sortFor("uom_code")}
-          />
-        ),
-        cell: ({ getValue }) => getValue<string>(),
-        meta: { minWidth: 80 },
-      },
-      {
         id: "default_tax_code",
         accessorKey: "default_tax_code",
         header: () => (

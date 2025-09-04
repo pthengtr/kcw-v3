@@ -4,7 +4,6 @@ export type ProductSkuRow = {
   product_uuid: string;
   sku_code: string | null;
   sku_short_code: string | null;
-  uom_code: string;
   default_tax_code: string | null;
   is_active: boolean;
   created_at: string;
@@ -26,7 +25,6 @@ export type SortKey =
   | "category_code"
   | "sku_code"
   | "sku_short_code"
-  | "uom_code"
   | "default_tax_code"
   | "sku_updated_at";
 

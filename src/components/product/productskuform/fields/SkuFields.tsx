@@ -3,13 +3,7 @@
 import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   FormField,
   FormItem,
@@ -17,9 +11,9 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import type { FormInput, RefsPayload } from "../types";
+import type { FormInput } from "../types";
 
-export function SkuFields({ opts }: { opts: RefsPayload }) {
+export function SkuFields() {
   const form = useFormContext<FormInput>();
   return (
     <>
@@ -45,33 +39,6 @@ export function SkuFields({ opts }: { opts: RefsPayload }) {
             <FormControl>
               <Input {...field} />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="uom_code"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>UOM</FormLabel>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select UOM" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {opts.uoms.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <FormMessage />
           </FormItem>
         )}

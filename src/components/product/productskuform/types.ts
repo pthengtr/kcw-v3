@@ -10,7 +10,6 @@ export type ProductSkuInitial = {
   category_code?: string; // 2 digits
   is_active?: boolean;
   sku_code?: string | undefined; // optional in create => autogen
-  uom_code?: string;
   sku_short_code?: string | undefined;
   default_tax_code?: string | undefined;
 };
@@ -30,8 +29,6 @@ export const FormSchema = z
     is_active: z.boolean().optional(), // optional in schema, default in defaultValues
 
     sku_code: z.string().optional(), // optional, blank => autogen
-
-    uom_code: z.string().trim().min(1, "Select a UOM"),
 
     sku_short_code: z.string().optional(),
 
