@@ -88,6 +88,7 @@ function ProductTableToolbarBase({
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : String(e));
+      console.log(e);
     } finally {
       setConfirmOpen(false);
       if (refresh) await Promise.resolve(refresh());
