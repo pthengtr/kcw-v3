@@ -53,7 +53,7 @@ export default function ProductSkuForm({
       is_active: initial?.is_active ?? true,
       sku_code: initial?.sku_code ?? "",
       sku_short_code: initial?.sku_short_code ?? "",
-      default_tax_code: initial?.default_tax_code ?? "",
+      default_tax_code: initial?.default_tax_code ?? "VAT7",
     }),
     [initial]
   );
@@ -63,6 +63,11 @@ export default function ProductSkuForm({
     mode: "onChange",
     defaultValues,
   });
+
+  // ensure values refresh when editing a different record
+  React.useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues, form]);
 
   // Load select options
   const { opts, loading: refsLoading } = useProductRefs(open);
@@ -103,9 +108,7 @@ export default function ProductSkuForm({
           _sku_short_code: values.sku_short_code?.trim()
             ? values.sku_short_code.trim()
             : null,
-          _default_tax_code: values.default_tax_code?.trim()
-            ? values.default_tax_code.trim()
-            : null,
+          _default_tax_code: (values.default_tax_code || "VAT7").trim(),
         } as const;
 
         const { data, error } = await supabase.rpc(
@@ -202,7 +205,12 @@ export default function ProductSkuForm({
           </div>
 
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={submitting}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={submitting}>

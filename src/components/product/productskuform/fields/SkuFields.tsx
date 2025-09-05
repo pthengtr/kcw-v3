@@ -24,7 +24,7 @@ export function SkuFields() {
           <FormItem>
             <FormLabel>SKU code (optional)</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input value={field.value ?? ""} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -37,7 +37,7 @@ export function SkuFields() {
           <FormItem>
             <FormLabel>Short code</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input value={field.value ?? ""} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>

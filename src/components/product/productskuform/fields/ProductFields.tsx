@@ -4,7 +4,6 @@ import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import {
   FormField,
   FormItem,
@@ -27,7 +26,7 @@ export function ProductFields({ opts }: { opts: RefsPayload }) {
           <FormItem>
             <FormLabel>Product name</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input value={field.value ?? ""} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -41,7 +40,7 @@ export function ProductFields({ opts }: { opts: RefsPayload }) {
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea rows={3} {...field} />
+              <Input value={field.value ?? ""} onChange={field.onChange} />
             </FormControl>
             <FormMessage />
           </FormItem>

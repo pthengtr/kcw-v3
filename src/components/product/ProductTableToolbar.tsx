@@ -34,6 +34,7 @@ import ProductSkuDialog from "./ProductSkuDialog";
 
 import CategorySelect from "./CategorySelect";
 import { useProductRefs } from "./productskuform/useProductRefs";
+import { toast } from "sonner";
 
 type Props = {
   query: ProductQuery;
@@ -81,10 +82,12 @@ function ProductTableToolbarBase({
         const message = failures
           .map((f) => `${f.product_uuid}: ${f.error ?? "unknown error"}`)
           .join("\n");
-        alert(`Could not delete:\n${message}`);
+        toast.error("Some items could not be deleted", {
+          description: message,
+        });
       }
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : String(e));
+      toast.error(e instanceof Error ? e.message : String(e));
     } finally {
       setConfirmOpen(false);
       if (refresh) await Promise.resolve(refresh());
@@ -235,7 +238,6 @@ function ProductTableToolbarBase({
               category_code: selected.product_item?.category_code ?? "",
               is_active: selected.is_active,
               sku_code: selected.sku_code ?? undefined,
-              sku_short_code: selected.sku_short_code ?? undefined,
               default_tax_code: selected.default_tax_code ?? "",
             }}
             trigger={

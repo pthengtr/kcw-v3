@@ -27,10 +27,7 @@ export function TaxField({ opts }: { opts: RefsPayload }) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Default tax</FormLabel>
-          <Select
-            value={field.value || undefined}
-            onValueChange={field.onChange}
-          >
+          <Select value={field.value ?? "VAT7"} onValueChange={field.onChange}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select tax code" />

@@ -7,6 +7,13 @@ import type { ProductSkuRow } from "./types";
 import type { ProductQuery, SortKey } from "./types";
 import DataTableColumnHeader from "../common/DataTable/DataTableColumnHeader";
 
+import { Badge } from "@/components/ui/badge";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
+
 // client-only table to avoid dnd-kit hydration warnings
 import dynamic from "next/dynamic";
 const ClientOnlyTable = dynamic(
@@ -156,19 +163,6 @@ export default function ProductTable({
         meta: { minWidth: 140 },
       },
       {
-        id: "sku_short_code",
-        accessorKey: "sku_short_code",
-        header: () => (
-          <DataTableColumnHeader
-            title="SKU Short"
-            onClick={() => toggleSort("sku_short_code")}
-            sort={sortFor("sku_short_code")}
-          />
-        ),
-        cell: ({ getValue }) => getValue<string>() ?? "",
-        meta: { minWidth: 120 },
-      },
-      {
         id: "default_tax_code",
         accessorKey: "default_tax_code",
         header: () => (
@@ -193,6 +187,44 @@ export default function ProductTable({
         ),
         cell: ({ getValue }) => (getValue<boolean>() ? "Yes" : "No"),
         meta: { minWidth: 80 },
+      },
+      {
+        id: "barcodes",
+        accessorKey: "barcodes",
+        header: () => (
+          <DataTableColumnHeader
+            title="Barcodes"
+            onClick={() => toggleSort("primary_barcode")} // optional: sorts by primary barcode
+            sort={sortFor("primary_barcode")}
+          />
+        ),
+        cell: ({ row }) => (
+          <TagOverflowList
+            values={row.original.barcodes}
+            max={3}
+            title="All barcodes"
+          />
+        ),
+        meta: { minWidth: 240 },
+      },
+      {
+        id: "sku_short_codes",
+        accessorKey: "sku_short_codes",
+        header: () => (
+          <DataTableColumnHeader
+            title="Short codes"
+            onClick={() => toggleSort("primary_barcode")} // or remove sorting here
+            sort={null}
+          />
+        ),
+        cell: ({ row }) => (
+          <TagOverflowList
+            values={row.original.sku_short_codes}
+            max={3}
+            title="All short codes"
+          />
+        ),
+        meta: { minWidth: 220 },
       },
       {
         id: "sku_updated_at",
@@ -242,5 +274,67 @@ export default function ProductTable({
         }
       />
     </div>
+  );
+}
+
+function TagOverflowList({
+  values,
+  max = 3,
+  empty = "—",
+  title,
+}: {
+  values: string[] | null | undefined;
+  max?: number;
+  empty?: string;
+  title?: string;
+}) {
+  const all = Array.isArray(values) ? values.filter(Boolean) : [];
+  if (all.length === 0)
+    return <span className="text-muted-foreground">{empty}</span>;
+
+  const shown = all.slice(0, max);
+  const hidden = all.length - shown.length;
+  const allStr = all.join(", ");
+
+  const TagStrip = (
+    <div className="flex flex-wrap gap-1.5">
+      {shown.map((v) => (
+        <Badge key={v} variant="secondary" className="rounded-full px-2 py-0.5">
+          {v}
+        </Badge>
+      ))}
+      {hidden > 0 && (
+        <Badge variant="outline" className="rounded-full px-2 py-0.5">
+          +{hidden}
+        </Badge>
+      )}
+    </div>
+  );
+
+  // nice hover; also add native title as fallback
+  return (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <div title={allStr}>{TagStrip}</div>
+      </HoverCardTrigger>
+      <HoverCardContent className="max-w-sm">
+        {title ? (
+          <div className="mb-1 text-xs font-medium text-muted-foreground">
+            {title}
+          </div>
+        ) : null}
+        <div className="flex flex-wrap gap-1.5">
+          {all.map((v) => (
+            <Badge
+              key={v}
+              variant="secondary"
+              className="rounded-full px-2 py-0.5"
+            >
+              {v}
+            </Badge>
+          ))}
+        </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
