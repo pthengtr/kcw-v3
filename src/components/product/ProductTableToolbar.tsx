@@ -221,6 +221,10 @@ function ProductTableToolbarBase({
             if (refresh) await Promise.resolve(refresh());
             else onQueryChange({});
           }}
+          onDirtyClose={() => {
+            if (refresh) refresh();
+            else onQueryChange({});
+          }}
         />
 
         {/* Update */}
@@ -247,6 +251,10 @@ function ProductTableToolbarBase({
             }
             onSaved={async () => {
               if (refresh) await Promise.resolve(refresh());
+              else onQueryChange({});
+            }}
+            onDirtyClose={() => {
+              if (refresh) refresh();
               else onQueryChange({});
             }}
           />

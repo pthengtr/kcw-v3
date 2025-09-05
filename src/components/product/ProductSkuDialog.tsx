@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { ProductSkuForm } from "./productskuform";
+import { ProductSkuFormTabs } from "./productskuform";
 import type { ProductSkuFormMode, ProductSkuInitial } from "./productskuform";
 
 export default function ProductSkuDialog({
@@ -18,6 +18,7 @@ export default function ProductSkuDialog({
   initial,
   trigger,
   onSaved,
+  onDirtyClose,
 }: {
   mode?: ProductSkuFormMode;
   initial?: ProductSkuInitial;
@@ -27,11 +28,27 @@ export default function ProductSkuDialog({
     sku_uuid: string;
     sku_code: string;
   }) => void;
+  onDirtyClose?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
 
+  const dirtyRef = React.useRef(false);
+  const markDirty = React.useCallback(() => {
+    dirtyRef.current = true;
+  }, []);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        // if closing and something changed, refresh the table
+        if (!next && dirtyRef.current) {
+          dirtyRef.current = false;
+          onDirtyClose?.();
+        }
+        setOpen(next);
+      }}
+    >
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
@@ -45,7 +62,7 @@ export default function ProductSkuDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ProductSkuForm
+        <ProductSkuFormTabs
           mode={mode}
           initial={initial}
           open={open}
@@ -54,6 +71,10 @@ export default function ProductSkuDialog({
             setOpen(false);
           }}
           onCancel={() => setOpen(false)}
+          onAnyChange={() => {
+            // Add/delete barcode or short code
+            markDirty();
+          }}
         />
       </DialogContent>
     </Dialog>

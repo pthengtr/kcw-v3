@@ -105,9 +105,6 @@ export default function ProductSkuForm({
           _category_code: values.category_code,
           _is_active: values.is_active ?? true,
           _sku_code: values.sku_code?.trim() ? values.sku_code.trim() : null,
-          _sku_short_code: values.sku_short_code?.trim()
-            ? values.sku_short_code.trim()
-            : null,
           _default_tax_code: (values.default_tax_code || "VAT7").trim(),
         } as const;
 
@@ -139,9 +136,6 @@ export default function ProductSkuForm({
           _category_code: values.category_code,
           _is_active: values.is_active ?? true,
           _sku_code: values.sku_code?.trim() ? values.sku_code.trim() : null,
-          _sku_short_code: values.sku_short_code?.trim()
-            ? values.sku_short_code.trim()
-            : null,
           _default_tax_code: values.default_tax_code?.trim()
             ? values.default_tax_code.trim()
             : null, // required

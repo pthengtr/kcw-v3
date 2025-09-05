@@ -30,19 +30,6 @@ export function SkuFields() {
           </FormItem>
         )}
       />
-      <FormField
-        control={form.control}
-        name="sku_short_code"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Short code</FormLabel>
-            <FormControl>
-              <Input value={field.value ?? ""} onChange={field.onChange} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </>
   );
 }
