@@ -227,6 +227,35 @@ export default function ProductTable({
         meta: { minWidth: 220 },
       },
       {
+        id: "sizes",
+        accessorFn: (row) => row.size_tags ?? [], // keeps table state happy
+        header: () => <DataTableColumnHeader title="ขนาด" />, // “Sizes”
+        cell: ({ row }) => {
+          const label = row.original.size_kind_label ?? ""; // Thai desc, e.g. “ลูกปืน”
+          const tags = row.original.size_tags ?? [];
+
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              {label ? (
+                // Darker badge; tweak to your system (shadcn or custom)
+                <Badge
+                  variant="secondary"
+                  className="bg-foreground/80 text-background dark:bg-foreground"
+                >
+                  {label}
+                </Badge>
+              ) : null}
+
+              {/* Render label:value tags like “ใน: 10mm” */}
+              <TagOverflowList values={tags} max={3} title="All sizes" />
+            </div>
+          );
+        },
+        enableSorting: false, // no server sort on this column (yet)
+        meta: { minWidth: 300 }, // adjust to your layout
+      },
+
+      {
         id: "sku_updated_at",
         accessorFn: (row) => row.updated_at,
         header: () => (

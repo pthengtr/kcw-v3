@@ -27,7 +27,7 @@ import {
 import { Edit, Trash2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import type { ProductQuery, ProductSkuRow } from "./types";
+import type { ActiveFilter, ProductQuery, ProductSkuRow } from "./types";
 import ProductSkuDialog from "./ProductSkuDialog";
 
 // Reuse the shared category picker
@@ -35,6 +35,7 @@ import ProductSkuDialog from "./ProductSkuDialog";
 import CategorySelect from "./CategorySelect";
 import { useProductRefs } from "./productskuform/useProductRefs";
 import { toast } from "sonner";
+import SizeFilter from "./SizeFilter";
 
 type Props = {
   query: ProductQuery;
@@ -57,6 +58,8 @@ function ProductTableToolbarBase({
   const supabase = React.useMemo(() => createClient(), []);
   const hasSelection = !!selected;
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+
+  // load labels when kind changes
 
   // Load refs once for toolbar dropdowns
   const { opts } = useProductRefs(true);
@@ -101,6 +104,20 @@ function ProductTableToolbarBase({
       ? query.filters.category
       : "all";
 
+  const parseActive = (v: string | null | undefined): ActiveFilter => {
+    switch (v) {
+      case "active":
+      case "inactive":
+      case "all":
+        return v;
+      default:
+        return "all"; // fallback if v is undefined/cleared
+    }
+  };
+
+  const normalizeNullable = (v?: string | null) =>
+    v && v.trim() !== "" ? v.trim() : null;
+
   return (
     <div className="flex flex-wrap items-end gap-3 p-3 border-b bg-muted/40">
       {/* Search */}
@@ -121,7 +138,6 @@ function ProductTableToolbarBase({
           }
         />
       </div>
-
       {/* Category */}
       <div className="flex flex-col gap-1">
         <Label htmlFor="tb-category" className="text-xs">
@@ -132,7 +148,7 @@ function ProductTableToolbarBase({
             triggerId="tb-category"
             value={categoryValue}
             onChange={(v) => {
-              const next = v === "all" ? undefined : v;
+              const next = v === "all" ? null : normalizeNullable(v);
               onQueryChange({
                 pageIndex: 0,
                 filters: { ...query.filters, category: next },
@@ -149,7 +165,6 @@ function ProductTableToolbarBase({
           </div>
         )}
       </div>
-
       {/* Active */}
       <div className="flex flex-col gap-1">
         <Label htmlFor="tb-active" className="text-xs">
@@ -158,10 +173,9 @@ function ProductTableToolbarBase({
         <Select
           value={String(query.filters.active ?? "all")}
           onValueChange={(v) => {
-            const active: boolean | "all" = v === "all" ? "all" : v === "true";
             onQueryChange({
               pageIndex: 0,
-              filters: { ...query.filters, active },
+              filters: { ...query.filters, active: parseActive(v) },
             });
           }}
         >
@@ -176,6 +190,29 @@ function ProductTableToolbarBase({
         </Select>
       </div>
 
+      <SizeFilter
+        value={{
+          sizeKind: query.filters.sizeKind,
+          sizeSlots: query.filters.sizeSlots,
+        }}
+        onChange={(next) =>
+          onQueryChange({
+            pageIndex: 0,
+            filters: {
+              ...query.filters,
+              sizeKind: next.sizeKind,
+              sizeSlots: next.sizeSlots,
+            },
+          })
+        }
+        currentSort={query.sortBy}
+        onSortChange={(id, desc) =>
+          onQueryChange({
+            pageIndex: 0,
+            sortBy: { id, desc },
+          })
+        }
+      />
       {/* Right-side controls */}
       <div className="ml-auto flex items-end gap-3">
         {/* Page size with label */}

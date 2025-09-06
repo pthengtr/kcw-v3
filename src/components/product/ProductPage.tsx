@@ -1,10 +1,19 @@
 "use client";
 
 import * as React from "react";
-
 import ProductTable from "@/components/product/ProductTable";
 import { createClient } from "@/lib/supabase/client";
 import { ProductQuery, ProductSkuRow } from "./types";
+
+/** Debounce a primitive value (like a string) */
+function useDebouncedValue<T>(value: T, delay = 250) {
+  const [v, setV] = React.useState(value);
+  React.useEffect(() => {
+    const id = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return v;
+}
 
 export default function ProductPage() {
   const supabase = createClient();
@@ -13,60 +22,110 @@ export default function ProductPage() {
   const [total, setTotal] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
 
+  // parent state
   const [query, setQuery] = React.useState<ProductQuery>({
     pageIndex: 0,
     pageSize: 20,
     sortBy: { id: "sku_updated_at", desc: true },
-    filters: { search: "", category: "", active: "all" },
+    filters: {
+      search: "",
+      category: null,
+      active: "all",
+      sizeKind: null, // single kind for slot inputs
+      sizeSlots: {}, // {'1'?:string,'2'?:string,'3'?:string}
+    },
   });
 
-  // inside your ProductPage component
-  const fetchPage = React.useCallback(async () => {
-    setLoading(true);
-    const { pageIndex, pageSize, sortBy, filters } = query;
+  // nested merge helper
+  const onQueryChange = React.useCallback((patch: Partial<ProductQuery>) => {
+    setQuery((prev) => ({
+      ...prev,
+      ...patch,
+      filters: { ...prev.filters, ...(patch.filters ?? {}) },
+    }));
+  }, []);
 
-    const { data, error } = await supabase.rpc("rpc_product_skus", {
-      _page_index: pageIndex,
-      _page_size: pageSize,
-      _sort_id: sortBy?.id ?? "sku_updated_at",
-      _sort_desc: sortBy?.desc ?? true,
-      _search: filters.search || null,
-      _category: filters.category?.trim() || null,
-      _active: filters.active === "all" ? null : !!filters.active,
-    });
+  // ---- Debounce only keystroke fields ----
+  const debSearch = useDebouncedValue(query.filters.search ?? "", 250);
+  const debPos1 = useDebouncedValue(query.filters.sizeSlots["1"] ?? "", 250);
+  const debPos2 = useDebouncedValue(query.filters.sizeSlots["2"] ?? "", 250);
+  const debPos3 = useDebouncedValue(query.filters.sizeSlots["3"] ?? "", 250);
 
-    if (error) {
-      console.error(error);
-      setRows([]);
-      setTotal(0);
-    } else {
-      setRows(data ?? []);
-      setTotal(data && data.length ? Number(data[0].total_count) : 0);
-    }
-    setLoading(false);
-  }, [query, supabase]);
+  // ---- Fetcher that takes explicit params (no stale closure) ----
+  type RpcFilters = {
+    page_index: number;
+    page_size: number;
+    sort_id: string;
+    sort_desc: boolean;
+    search: string | null;
+    category: string | null;
+    active: "active" | "inactive" | null;
+    size_kind_code: string | null;
+    size_pos1: string | null;
+    size_pos2: string | null;
+    size_pos3: string | null;
+  };
 
-  // Debounce when typing text filters
-  const debRef = React.useRef<number | null>(null);
-  const schedule = React.useCallback(
-    (debounce: boolean) => {
-      if (debRef.current) window.clearTimeout(debRef.current);
-      if (debounce) {
-        debRef.current = window.setTimeout(() => {
-          debRef.current = null;
-          void fetchPage();
-        }, 250);
+  const fetchPageNow = React.useCallback(
+    async (_f: RpcFilters) => {
+      setLoading(true);
+      const { data, error } = await supabase.rpc("rpc_product_skus_v2", { _f });
+
+      if (error) {
+        console.error(error);
+        setRows([]);
+        setTotal(0);
       } else {
-        void fetchPage();
+        setRows(data ?? []);
+        setTotal(data && data.length ? Number(data[0].total_count) : 0);
       }
+      setLoading(false);
     },
-    [fetchPage]
+    [supabase]
   );
 
+  // ---- Drive fetch from debounced text + immediate non-text deps ----
   React.useEffect(() => {
-    const debounce = !!query.filters.search || !!query.filters.category;
-    schedule(debounce);
-  }, [query, schedule]);
+    const { pageIndex, pageSize, sortBy, filters } = query;
+
+    const _f: RpcFilters = {
+      page_index: pageIndex,
+      page_size: pageSize,
+      sort_id: sortBy?.id ?? "sku_updated_at",
+      sort_desc: sortBy?.desc ?? true,
+
+      // debounced free text
+      search: debSearch.trim() ? debSearch.trim() : null,
+
+      // immediate filters
+      category: filters.category ?? null,
+      active:
+        filters.active === "all"
+          ? null
+          : (filters.active as "active" | "inactive"),
+      size_kind_code: filters.sizeKind ?? null,
+
+      // debounced slot text (only meaningful with a size kind; rpc ignores when kind is null)
+      size_pos1: debPos1.trim() ? debPos1.trim() : null,
+      size_pos2: debPos2.trim() ? debPos2.trim() : null,
+      size_pos3: debPos3.trim() ? debPos3.trim() : null,
+    };
+
+    void fetchPageNow(_f);
+  }, [
+    debSearch,
+    debPos1,
+    debPos2,
+    debPos3,
+    query.pageIndex,
+    query.pageSize,
+    query.sortBy,
+    query.filters.category,
+    query.filters.active,
+    query.filters.sizeKind,
+    fetchPageNow,
+    query,
+  ]);
 
   return (
     <div className="p-4">
@@ -76,7 +135,7 @@ export default function ProductPage() {
         total={total}
         loading={loading}
         query={query}
-        onQueryChange={(next) => setQuery((prev) => ({ ...prev, ...next }))}
+        onQueryChange={onQueryChange}
       />
     </div>
   );
